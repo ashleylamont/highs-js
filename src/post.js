@@ -205,10 +205,13 @@ Module["getIis"] = function (model_str, highs_options) {
 };
 
 function setNumericOption(highs, option_name, option_value) {
-  let result = Highs_setDoubleOptionValue(highs, option_name, option_value);
-  if (result === -1 && option_value === (option_value | 0))
-    result = Highs_setIntOptionValue(highs, option_name, option_value);
-  return result;
+  // Try int first for integer values to avoid HiGHS logging a spurious error
+  // when the option only accepts integers (e.g. iis_strategy).
+  if (option_value === (option_value | 0)) {
+    const result = Highs_setIntOptionValue(highs, option_name, option_value);
+    if (result !== -1) return result;
+  }
+  return Highs_setDoubleOptionValue(highs, option_name, option_value);
 }
 
 function parseNum(s) {
