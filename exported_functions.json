@@ -14,6 +14,10 @@
   "_Highs_getNumCol",
   "_Highs_getNumRow",
   "_Highs_getIis",
+  "_Highs_getColName",
+  "_Highs_getRowName",
+  "_Highs_getColsByRange",
+  "_Highs_getRowsByRange",
   "_malloc",
   "_free"
 ]

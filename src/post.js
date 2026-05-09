@@ -19,6 +19,18 @@ const Highs_setStringOptionValue = Module["cwrap"](
   "number",
   ["number", "string", "string"]
 );
+const Highs_getColName = Module["cwrap"](
+  "Highs_getColName", "number", ["number", "number", "number"]
+);
+const Highs_getRowName = Module["cwrap"](
+  "Highs_getRowName", "number", ["number", "number", "number"]
+);
+const Highs_getColsByRange = Module["cwrap"](
+  "Highs_getColsByRange", "number", ["number", "number", "number", "number", "number", "number", "number", "number", "number", "number", "number"]
+);
+const Highs_getRowsByRange = Module["cwrap"](
+  "Highs_getRowsByRange", "number", ["number", "number", "number", "number", "number", "number", "number", "number", "number", "number"]
+);
 const Highs_setBoolOptionValue = Module["cwrap"](
   "Highs_setBoolOptionValue",
   "number",
@@ -150,6 +162,7 @@ Module["getIis"] = function (model_str, highs_options) {
     );
   }
 
+  assert_ok(() => _Highs_run(highs), "solve the problem");
   const num_col = _Highs_getNumCol(highs);
   const num_row = _Highs_getNumRow(highs);
 
@@ -188,7 +201,42 @@ Module["getIis"] = function (model_str, highs_options) {
     const col_bound  = Array.from(M.HEAP32.subarray(ptr_col_bound  >> 2, (ptr_col_bound  >> 2) + iis_num_col));
     const row_bound  = Array.from(M.HEAP32.subarray(ptr_row_bound  >> 2, (ptr_row_bound  >> 2) + iis_num_row));
 
-    return { col_index, row_index, col_bound, row_bound };
+    // Fetch names and bounds for IIS columns
+    const DBL_SIZE = 8;
+    const NAME_SIZE = 512;
+    const ptr_name = M._malloc(NAME_SIZE);
+    const ptr_lower = M._malloc(DBL_SIZE);
+    const ptr_upper = M._malloc(DBL_SIZE);
+    const ptr_num_col = M._malloc(4);
+    const ptr_num_row = M._malloc(4);
+    const ptr_num_nz = M._malloc(4);
+    try {
+      const cols = col_index.map((col, i) => {
+        Highs_getColName(highs, col, ptr_name);
+        const name = M.UTF8ToString(ptr_name);
+        Highs_getColsByRange(highs, col, col, ptr_num_col, ptr_lower, ptr_upper, ptr_num_nz, 0, 0, 0);
+        const lower = M.HEAPF64[ptr_lower >> 3];
+        const upper = M.HEAPF64[ptr_upper >> 3];
+        return { index: col, name, lower, upper, bound: col_bound[i] };
+      });
+      const rows = row_index.map((row, i) => {
+        Highs_getRowName(highs, row, ptr_name);
+        const name = M.UTF8ToString(ptr_name);
+        Highs_getRowsByRange(highs, row, row, ptr_num_row, ptr_lower, ptr_upper, ptr_num_nz, 0, 0, 0);
+        const lower = M.HEAPF64[ptr_lower >> 3];
+        const upper = M.HEAPF64[ptr_upper >> 3];
+        return { index: row, name, lower, upper, bound: row_bound[i] };
+      });
+      const log = stdout_lines.join("\n");
+      return { col_index, row_index, col_bound, row_bound, cols, rows, log };
+    } finally {
+      M._free(ptr_name);
+      M._free(ptr_lower);
+      M._free(ptr_upper);
+      M._free(ptr_num_col);
+      M._free(ptr_num_row);
+      M._free(ptr_num_nz);
+    }
   } finally {
     M._free(ptr_iis_num_col);
     M._free(ptr_iis_num_row);
