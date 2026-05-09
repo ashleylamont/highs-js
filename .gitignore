@@ -1,5 +1,8 @@
 build/*
 !build/build.sh
 !build/*json
+!build/highs.js
+!build/highs.mjs
+!build/highs.wasm
 cbuild/
 node_modules/
