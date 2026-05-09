@@ -27,7 +27,7 @@ emcc -O3 \
 	-s ALLOW_MEMORY_GROWTH=1 \
 	-s STACK_SIZE=4194304 \
 	-flto \
-	--closure 1 \
+	--closure 0 \
 	--pre-js "$root/src/pre.js" \
 	--post-js "$root/src/post.js" \
 	lib/*.a -o highs.js
