@@ -22,7 +22,7 @@ emmake make -j8 libhighs
 export EMCC_CLOSURE_ARGS="--jscomp_off=checkTypes"
 emcc -O3 \
 	-s EXPORTED_FUNCTIONS="@$root/exported_functions.json" \
-	-s EXPORTED_RUNTIME_METHODS="['cwrap','_malloc','_free']" \
+	-s EXPORTED_RUNTIME_METHODS="['cwrap']" \
 	-s MODULARIZE=1 \
 	-s ALLOW_MEMORY_GROWTH=1 \
 	-s STACK_SIZE=4194304 \

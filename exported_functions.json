@@ -13,5 +13,7 @@
   "_Highs_setBoolOptionValue",
   "_Highs_getNumCol",
   "_Highs_getNumRow",
-  "_Highs_getIis"
+  "_Highs_getIis",
+  "_malloc",
+  "_free"
 ]
