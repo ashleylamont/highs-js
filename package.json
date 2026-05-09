@@ -7,6 +7,8 @@
   "exports": {
     ".": {
       "types": "./types.d.ts",
+      "import": "./build/highs.mjs",
+      "require": "./build/highs.js",
       "default": "./build/highs.js"
     },
     "./runtime": "./build/highs.wasm"
@@ -45,6 +47,7 @@
   },
   "files": [
     "build/highs.js",
+    "build/highs.mjs",
     "build/highs.wasm",
     "package.json",
     "types.d.ts",
