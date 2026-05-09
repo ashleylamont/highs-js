@@ -1,5 +1,15 @@
 type Highs = {
   solve(problem: string, options?: HighsOptions): HighsSolution;
+  /**
+   * Compute an Irreducible Infeasible Subsystem (IIS) for an infeasible model.
+   * Returns the column and row indices (into the original model) that form
+   * the IIS, along with their bound statuses, or null if no IIS was found.
+   *
+   * Note: IIS computation requires the model to be infeasible. The IIS feature
+   * is available from HiGHS v1.12.0 onwards and is considered work-in-progress
+   * by the HiGHS team.
+   */
+  getIis(problem: string, options?: HighsOptions): HighsIis | null;
 };
 
 type HighsOptions = Readonly<
@@ -567,6 +577,28 @@ type GenericHighsSolution<IsLinear extends boolean, ColType, RowType, Status ext
   ObjectiveValue: number;
   Columns: Record<string, ColType>;
   Rows: RowType[];
+  /**
+   * The raw solver log output from HiGHS (stdout lines joined with newlines).
+   * Only present when `log_to_console: true` is passed in the options.
+   */
+  Log?: string;
+};
+
+/**
+ * The result of an IIS computation via {@link Highs.getIis}.
+ *
+ * - `col_index`: indices of original model columns in the IIS
+ * - `row_index`: indices of original model rows (constraints) in the IIS
+ * - `col_bound`: bound status of each column in the IIS
+ *   (0 = lower bound active, 1 = upper bound active)
+ * - `row_bound`: bound status of each row in the IIS
+ *   (0 = lower bound active, 1 = upper bound active)
+ */
+type HighsIis = {
+  col_index: number[];
+  row_index: number[];
+  col_bound: number[];
+  row_bound: number[];
 };
 
 type HighsModelStatus =

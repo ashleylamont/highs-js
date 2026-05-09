@@ -4,18 +4,26 @@
 ARG VARIANT="20-bookworm"
 FROM mcr.microsoft.com/vscode/devcontainers/javascript-node:1-${VARIANT}
 
-# [Optional] Uncomment this section to install additional OS packages.
+# Install build dependencies including Java (needed for google-closure-compiler on arm64)
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get -y install cmake
+    && apt-get -y install cmake default-jre-headless
 
 RUN git clone https://github.com/emscripten-core/emsdk.git /emsdk && \
     sudo /emsdk/emsdk install 3.1.71 && \
     sudo /emsdk/emsdk activate 3.1.71 && \
     sudo ln -s /emsdk/upstream/emscripten /usr/share/emscripten
 
-ENV PATH="$PATH:/emsdk:/emsdk/upstream/emscripten:/emsdk/node/20.18.0_64bit/bin"
+# Add emscripten and its bundled node to PATH.
+# The node directory name varies by architecture (e.g. _64bit vs _arm64),
+# so we discover it dynamically at build time.
+RUN EMSDK_NODE_DIR=$(ls /emsdk/node/ | head -1) && \
+    echo "export PATH=\"\$PATH:/emsdk:/emsdk/upstream/emscripten:/emsdk/node/${EMSDK_NODE_DIR}/bin\"" >> /etc/environment
+ENV PATH="$PATH:/emsdk:/emsdk/upstream/emscripten"
 
-RUN cd /emsdk/upstream/emscripten/ && sudo npm install acorn google-closure-compiler
+# Install JS tools for emscripten.
+# google-closure-compiler (Java-based jar) works on all architectures;
+# the linux-native binary is x64-only so we ignore optional deps.
+RUN cd /emsdk/upstream/emscripten/ && sudo npm install acorn google-closure-compiler --force
 
 # [Optional] Uncomment if you want to install an additional version of node using nvm
 # ARG EXTRA_NODE_VERSION=10
